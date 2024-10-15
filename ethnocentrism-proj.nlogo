@@ -237,6 +237,10 @@ to go
     set type-agent determine-type coop-in coop-out def-in def-out
   ]
 
+  if regular-perturbation? [
+    if ticks mod regular-perturbation-interval = 0 and ticks != 0 [perturbate]
+  ]
+
   tick
 
 end
@@ -351,7 +355,6 @@ end
 
 
 to perturbate
-  let iterations round (num-agents / 5)
   repeat iterations [
     ask turtles [
       let random-turtle one-of other turtles with [(not link-neighbor? myself) or (link-neighbor? myself and ([hidden?] of link-with myself = true))] ; Select a random turtle that is not itself, and not connected to myself
@@ -581,7 +584,7 @@ Small World Network
 PLOT
 986
 133
-1311
+1473
 397
 Had-game Proportion in All Links
 NIL
@@ -636,6 +639,47 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+13
+483
+199
+516
+iterations
+iterations
+1
+10
+1.0
+1
+1
+NIL
+HORIZONTAL
+
+SWITCH
+13
+409
+199
+442
+regular-perturbation?
+regular-perturbation?
+1
+1
+-1000
+
+SLIDER
+13
+445
+199
+478
+regular-perturbation-interval
+regular-perturbation-interval
+0
+500
+250.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
