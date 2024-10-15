@@ -348,6 +348,29 @@ to arrange-turtles ;similar to layout-circle (sort turtles) (max-pxcor - 1)
     set i i + 1
   ]
 end
+
+
+to perturbate
+  let iterations round (num-agents / 5)
+  repeat iterations [
+    ask turtles [
+      let random-turtle one-of other turtles with [(not link-neighbor? myself) or (link-neighbor? myself and ([hidden?] of link-with myself = true))] ; Select a random turtle that is not itself, and not connected to myself
+
+      if random-turtle != nobody [
+        ifelse link-with random-turtle = nobody [
+          create-link-with random-turtle
+          ask link-with random-turtle [
+            set had-game? false
+            set used-actions0 []
+            set used-actions1 []
+          ]
+        ][
+          ask link-with random-turtle [show-link]
+        ]
+      ]
+    ]
+  ]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -596,6 +619,23 @@ PENS
 "Cosmopolitan" 1.0 0 -11221820 true "" "plot (count turtles with [type-agent = \"Cosmopolitan\"])"
 "Egoist" 1.0 0 -955883 true "" "plot (count turtles with [type-agent = \"Egoist\"])"
 "Undefined" 1.0 0 -7500403 true "" "plot (count turtles with [type-agent = \"Undefined\"])"
+
+BUTTON
+13
+370
+199
+403
+NIL
+perturbate
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
