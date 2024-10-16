@@ -205,7 +205,7 @@ to go
         ]
 
         ;; Copy strategies
-        set strategies [strategies] of strategy-revisee
+        if random-float 1 < 1 / (1 + exp (beta * ([communality] of strategy-revisee - communality)))[set strategies [strategies] of strategy-revisee]
       ]
     ]
   ]
@@ -713,6 +713,17 @@ PENS
 "GT" 1.0 0 -723837 true "" "plot count turtles with [member? \"GT\" strategies]"
 "AD" 1.0 0 -6565750 true "" "plot count turtles with [member? \"AD\" strategies]"
 
+SWITCH
+13
+540
+198
+573
+binary-strategies
+binary-strategies
+1
+1
+-1000
+
 @#$#@#$#@
 ## WHAT IS IT?
 
@@ -1084,7 +1095,7 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="init-likeness-outgroup">
       <value value="0.5"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="gamma" first="0" step="2" last="20"/>
+    <steppedValueSet variable="gamma" first="0" step="5" last="20"/>
     <enumeratedValueSet variable="regular-perturbation?">
       <value value="false"/>
     </enumeratedValueSet>
@@ -1097,7 +1108,7 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="num-agents">
       <value value="100"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="W" first="0" step="2" last="20"/>
+    <steppedValueSet variable="W" first="0" step="5" last="20"/>
     <enumeratedValueSet variable="num-links">
       <value value="2"/>
     </enumeratedValueSet>
@@ -1130,7 +1141,7 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="init-likeness-outgroup">
       <value value="0.5"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="gamma" first="0" step="2" last="20"/>
+    <steppedValueSet variable="gamma" first="0" step="5" last="20"/>
     <enumeratedValueSet variable="regular-perturbation?">
       <value value="true"/>
     </enumeratedValueSet>
@@ -1143,7 +1154,7 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="num-agents">
       <value value="100"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="W" first="0" step="2" last="20"/>
+    <steppedValueSet variable="W" first="0" step="5" last="20"/>
     <enumeratedValueSet variable="num-links">
       <value value="2"/>
     </enumeratedValueSet>
