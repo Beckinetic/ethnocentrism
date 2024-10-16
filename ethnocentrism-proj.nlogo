@@ -37,11 +37,11 @@ to setup
     ifelse (who < minority-proportion * num-agents)[
       set tag "minority"
       set tag-ind 0
-      set color green
+      set shape "box"
     ][
       set tag "majority"
       set tag-ind 1
-      set color blue
+      set shape "circle"
     ]
 
     ;; Initialise the likeness list based on in-group and out-group likeness
@@ -53,17 +53,20 @@ to setup
 
     ;; Initialise strategies randomly for each group
     let strategy-list []
-    repeat n-groups [
-      set strategy-list lput one-of ["AC" "TFTT" "TFT" "GT" "AD"] strategy-list
-    ]
+    ;;repeat n-groups [
+    ;;  set strategy-list lput one-of ["AC" "TFTT" "TFT" "GT" "AD"] strategy-list
+    ;;  set strategy-list lput one-of ["TFTT" "TFT" "GT" "AD"] strategy-list
+    ;;]
+    set strategy-list lput one-of ["AC" "AD"] strategy-list
+    set strategy-list lput one-of ["AC" "AD"] strategy-list
     set strategies strategy-list
 
     ;; Setup common properties across groups
-    set shape "person"
     set communality 0
 
     ;; Set type
     set type-agent "Undefined"
+    set color grey
   ]
   ;; Arrange turtles in the world
   ;; TODO-20241010: Other arranging methods might look better?
@@ -235,6 +238,13 @@ to go
       ]
     ]
     set type-agent determine-type coop-in coop-out def-in def-out
+
+    (ifelse
+      type-agent = "Altruist" [set color lime]
+      type-agent = "Ethnocentrist" [set color yellow]
+      type-agent = "Cosmopolitan" [set color cyan]
+      type-agent = "Egoist" [set color orange]
+      type-agent = "Undefined" [set color grey])
   ]
 
   if regular-perturbation? [
@@ -288,10 +298,10 @@ to-report PD-game [strategy0 strategy1]
       set payoff 1 ; reward payoff (R)
     ]
     strategy0 = "C" and strategy1 = "D" [
-      set payoff 0 - gamma ; sucker payoff (S)
+      set payoff (0 - gamma) ; sucker payoff (S)
     ]
     strategy0 = "D" and strategy1 = "C" [
-      set payoff 1 + gamma ; temptation payoff (T)
+      set payoff (1 + gamma) ; temptation payoff (T)
     ]
     strategy0 = "D" and strategy1 = "D" [
       set payoff 0 ; punishment payoff (P)
@@ -441,7 +451,7 @@ init-likeness-ingroup
 init-likeness-ingroup
 0
 1
-0.5
+0.7
 0.1
 1
 NIL
@@ -456,7 +466,7 @@ init-likeness-outgroup
 init-likeness-outgroup
 0
 1
-0.5
+0.3
 0.1
 1
 NIL
@@ -503,7 +513,7 @@ rewire-prop
 rewire-prop
 0
 1
-0.2
+0.4
 0.1
 1
 NIL
@@ -548,7 +558,7 @@ W
 W
 0
 20
-10.0
+4.0
 1
 1
 NIL
@@ -584,7 +594,7 @@ Small World Network
 PLOT
 986
 133
-1473
+1221
 397
 Had-game Proportion in All Links
 NIL
@@ -680,6 +690,28 @@ regular-perturbation-interval
 1
 NIL
 HORIZONTAL
+
+PLOT
+1239
+133
+1474
+397
+Strategies
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"AC" 1.0 0 -1604481 true "" "plot count turtles with [member? \"AC\" strategies]"
+"TFTT" 1.0 0 -408670 true "" "plot count turtles with [member? \"TFTT\" strategies]"
+"TFT" 1.0 0 -3889007 true "" "plot count turtles with [member? \"TFT\" strategies]"
+"GT" 1.0 0 -723837 true "" "plot count turtles with [member? \"GT\" strategies]"
+"AD" 1.0 0 -6565750 true "" "plot count turtles with [member? \"AD\" strategies]"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1027,6 +1059,100 @@ NetLogo 6.4.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment-no-perturbation" repetitions="20" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <exitCondition>ticks = 501</exitCondition>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "minority"]</metric>
+    <runMetricsCondition>ticks = 500</runMetricsCondition>
+    <enumeratedValueSet variable="init-likeness-ingroup">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="iterations">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-likeness-outgroup">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="gamma" first="0" step="2" last="20"/>
+    <enumeratedValueSet variable="regular-perturbation?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.002"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="rewire-prop">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-agents">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="W" first="0" step="2" last="20"/>
+    <enumeratedValueSet variable="num-links">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="regular-perturbation-interval">
+      <value value="250"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="minority-proportion" first="0.1" step="0.1" last="0.4"/>
+  </experiment>
+  <experiment name="experiment-with-perturbation" repetitions="20" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <exitCondition>ticks = 501</exitCondition>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "minority"]</metric>
+    <runMetricsCondition>ticks = 500</runMetricsCondition>
+    <enumeratedValueSet variable="init-likeness-ingroup">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="iterations">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-likeness-outgroup">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="gamma" first="0" step="2" last="20"/>
+    <enumeratedValueSet variable="regular-perturbation?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.002"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="rewire-prop">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-agents">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="W" first="0" step="2" last="20"/>
+    <enumeratedValueSet variable="num-links">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="regular-perturbation-interval">
+      <value value="250"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="minority-proportion" first="0.1" step="0.1" last="0.4"/>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
