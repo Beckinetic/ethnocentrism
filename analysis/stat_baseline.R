@@ -1,21 +1,11 @@
----
-title: "Group Project"
-output: html_notebook
----
-
-Baseline Model
-
--   To control: Gamma and W
-
--   To observe: proportion of types
-
-1.  Import Data
-
-```{r}
+# Load necessary libraries
 library(dplyr)
-data_raw <- read.csv('../data/ethnocentrism-proj experiment-baseline-table.csv',skip=6)
+library(ggplot2)
 
-# rename columns for simplicity
+# Step 1: Data Import and Column Renaming
+data_raw <- read.csv('../data/ethnocentrism-proj experiment-baseline-table.csv', skip=6)
+
+# Rename columns for simplicity
 colnames(data_raw) <- colnames(data_raw) %>%
   gsub("count\\.turtles\\.with\\.\\.type\\.agent\\.\\.\\.\\.|\\.\\.and\\.tag\\.\\.\\.", "", .) %>%
   gsub("Altruist", "altruist", .) %>%
@@ -27,13 +17,7 @@ colnames(data_raw) <- colnames(data_raw) %>%
   gsub("minority", "minority", .) %>%
   gsub("\\.", "", .)
 
-colnames(data_raw)
-```
-
-2.  Make plots
-
-```{r}
-library(ggplot2)
+# Step 2: Facet Plot (Dominant Agent Type by Gamma and W)
 
 # all
 dominance_data <- data_raw %>%
@@ -105,7 +89,7 @@ dominance_data_minority <- data_raw %>%
   )
 
 # plot all
-ggplot(dominance_data, aes(x = gamma, y = W)) +
+facet_all <- ggplot(dominance_data, aes(x = gamma, y = W)) +
   geom_tile(aes(fill = dominant_type, alpha = dominance_level)) +
   geom_text(aes(label = round(dominance_level * 100, 0)), color = "black", size = 3) +
   scale_fill_manual(values = c("Altruist" = "green", 
@@ -121,7 +105,7 @@ ggplot(dominance_data, aes(x = gamma, y = W)) +
   coord_fixed()
 
 # majority group
-ggplot(dominance_data_majority, aes(x = gamma, y = W)) +
+facet_majority <- ggplot(dominance_data_majority, aes(x = gamma, y = W)) +
   geom_tile(aes(fill = dominant_type, alpha = dominance_level)) +
   geom_text(aes(label = round(dominance_level * 100, 0)), color = "black", size = 3) +
   scale_fill_manual(values = c("Altruist" = "green", 
@@ -137,7 +121,7 @@ ggplot(dominance_data_majority, aes(x = gamma, y = W)) +
   coord_fixed()
 
 # minority group
-ggplot(dominance_data_minority, aes(x = gamma, y = W)) +
+facet_minority <- ggplot(dominance_data_minority, aes(x = gamma, y = W)) +
   geom_tile(aes(fill = dominant_type, alpha = dominance_level)) +
   geom_text(aes(label = round(dominance_level * 100, 0)), color = "black", size = 3) +
   scale_fill_manual(values = c("Altruist" = "green", 
@@ -151,88 +135,98 @@ ggplot(dominance_data_minority, aes(x = gamma, y = W)) +
   theme_minimal() +
   theme(panel.grid = element_blank()) +
   coord_fixed()
-```
 
-```{r}
-# Define the plotting functions with consistent color schemes
-plot_types_majority <- function(data, x_var, title_suffix) {
-  ggplot(data, aes_string(x = x_var)) +
-    geom_line(aes(y = avg_altruistmajority, color = "Altruist")) +
-    geom_line(aes(y = avg_ethnocentristmajority, color = "Ethnocentrist")) +
-    geom_line(aes(y = avg_cosmopolitanmajority, color = "Cosmopolitan")) +
-    geom_line(aes(y = avg_egoistmajority, color = "Egoist")) +
-    scale_color_manual(values = c("Altruist" = "green", 
-                                  "Ethnocentrist" = "yellow", 
-                                  "Cosmopolitan" = "blue", 
-                                  "Egoist" = "orange")) +
-    labs(title = paste("Effect of", x_var, "on Agent Types - Majority", title_suffix),
-         x = x_var, y = "Number of Agents", color = "Agent Type") +
-    theme_minimal()
+# Save Facet Plot
+ggsave("../plot/baseline_facet_plot_all_groups.png", plot = facet_all, width = 8, height = 6)
+ggsave("../plot/baseline_facet_plot_majority_groups.png", plot = facet_majority, width = 8, height = 6)
+ggsave("../plot/baseline_facet_plot_minority_groups.png", plot = facet_minority, width = 8, height = 6)
+
+# Step 3: Line Plots for Majority, Minority, and Combined
+
+# Average data over gamma and W
+average_data_gamma <- data_raw %>%
+  group_by(gamma) %>%
+  summarise(across(altruistmajority:egoistminority, mean, .names = "avg_{col}"))
+
+average_data_W <- data_raw %>%
+  group_by(W) %>%
+  summarise(across(altruistmajority:egoistminority, mean, .names = "avg_{col}"))
+
+plot_types <- function(data, x_var, group, title_suffix, file_name) {
+  if (group == "all") {
+    plot <- ggplot(data, aes_string(x = x_var)) +
+      geom_line(aes(y = avg_altruistmajority + avg_altruistminority, color = "Altruist")) +
+      geom_line(aes(y = avg_ethnocentristmajority + avg_ethnocentristminority, color = "Ethnocentrist")) +
+      geom_line(aes(y = avg_cosmopolitanmajority + avg_cosmopolitanminority, color = "Cosmopolitan")) +
+      geom_line(aes(y = avg_egoistmajority + avg_egoistminority, color = "Egoist")) +
+      scale_color_manual(values = c("Altruist" = "green", 
+                                    "Ethnocentrist" = "yellow", 
+                                    "Cosmopolitan" = "blue", 
+                                    "Egoist" = "orange")) +
+      labs(title = paste("Effect of", x_var, "on Agent Types -", title_suffix),
+           x = x_var, y = "Number of Agents", color = "Agent Type") +
+      ylim(0, 80) + 
+      theme_minimal() +
+      theme(
+        panel.grid.major = element_line(color = "grey80", size = 0.5), # Make major grid lines lighter
+        panel.grid.minor = element_line(color = "grey90", size = 0.25) # Make minor grid lines even lighter
+      )
+  } else {
+    plot <- ggplot(data, aes_string(x = x_var)) +
+      geom_line(aes_string(y = paste0("avg_altruist", group), color = "'Altruist'")) +
+      geom_line(aes_string(y = paste0("avg_ethnocentrist", group), color = "'Ethnocentrist'")) +
+      geom_line(aes_string(y = paste0("avg_cosmopolitan", group), color = "'Cosmopolitan'")) +
+      geom_line(aes_string(y = paste0("avg_egoist", group), color = "'Egoist'")) +
+      scale_color_manual(values = c("Altruist" = "green", 
+                                    "Ethnocentrist" = "yellow", 
+                                    "Cosmopolitan" = "blue", 
+                                    "Egoist" = "orange")) +
+      labs(title = paste("Effect of", x_var, "on Agent Types -", title_suffix),
+           x = x_var, y = "Number of Agents", color = "Agent Type") +
+      ylim(0, 80) +
+      theme_minimal() +
+      theme(
+        panel.grid.major = element_line(color = "grey80", size = 0.5), # Make major grid lines lighter
+        panel.grid.minor = element_line(color = "grey90", size = 0.25) # Make minor grid lines even lighter
+      )
+  }
+  
+  # Save the plot
+  ggsave(file_name, plot = plot, width = 8, height = 6)
 }
 
-plot_types_minority <- function(data, x_var, title_suffix) {
-  ggplot(data, aes_string(x = x_var)) +
-    geom_line(aes(y = avg_altruistminority, color = "Altruist")) +
-    geom_line(aes(y = avg_ethnocentristminority, color = "Ethnocentrist")) +
-    geom_line(aes(y = avg_cosmopolitanminority, color = "Cosmopolitan")) +
-    geom_line(aes(y = avg_egoistminority, color = "Egoist")) +
-    scale_color_manual(values = c("Altruist" = "green", 
-                                  "Ethnocentrist" = "yellow", 
-                                  "Cosmopolitan" = "blue", 
-                                  "Egoist" = "orange")) +
-    labs(title = paste("Effect of", x_var, "on Agent Types - Minority", title_suffix),
-         x = x_var, y = "Number of Agents", color = "Agent Type") +
-    theme_minimal()
-}
+# Plot and save for Gamma
+plot_types(average_data_gamma, "gamma", "majority", "Majority Group Averaged Over W and Minority Proportion", "../plot/baseline_line_plot_majority_gamma.png")
+plot_types(average_data_gamma, "gamma", "minority", "Minority Group Averaged Over W and Minority Proportion", "../plot/baseline_line_plot_minority_gamma.png")
+plot_types(average_data_gamma, "gamma", "all", "All Groups Averaged Over W and Minority Proportion", "../plot/baseline_line_plot_all_gamma.png")
 
-plot_types_all <- function(data, x_var, title_suffix) {
-  ggplot(data, aes_string(x = x_var)) +
-    geom_line(aes(y = avg_altruistmajority + avg_altruistminority, color = "Altruist")) +
-    geom_line(aes(y = avg_ethnocentristmajority + avg_ethnocentristminority, color = "Ethnocentrist")) +
-    geom_line(aes(y = avg_cosmopolitanmajority + avg_cosmopolitanminority, color = "Cosmopolitan")) +
-    geom_line(aes(y = avg_egoistmajority + avg_egoistminority, color = "Egoist")) +
-    scale_color_manual(values = c("Altruist" = "green", 
-                                  "Ethnocentrist" = "yellow", 
-                                  "Cosmopolitan" = "blue", 
-                                  "Egoist" = "orange")) +
-    labs(title = paste("Effect of", x_var, "on Agent Types - All", title_suffix),
-         x = x_var, y = "Number of Agents", color = "Agent Type") +
-    theme_minimal()
-}
+# Plot and save for W
+plot_types(average_data_W, "W", "majority", "Majority Group Averaged Over Gamma and Minority Proportion", "../plot/baseline_line_plot_majority_W.png")
+plot_types(average_data_W, "W", "minority", "Minority Group Averaged Over Gamma and Minority Proportion", "../plot/baseline_line_plot_minority_W.png")
+plot_types(average_data_W, "W", "all", "All Groups Averaged Over Gamma and Minority Proportion", "../plot/baseline_line_plot_all_W.png")
 
-# Plot for gamma
-plot_types_majority(average_data_gamma, "gamma", "Averaged Over W")
-plot_types_minority(average_data_gamma, "gamma", "Averaged Over W")
-plot_types_all(average_data_gamma, "gamma", "Averaged Over W")
+# Step 4: MANOVA for All, Majority, and Minority Groups
 
-# Plot for W
-plot_types_majority(average_data_W, "W", "Averaged Over Gamma")
-plot_types_minority(average_data_W, "W", "Averaged Over Gamma")
-plot_types_all(average_data_W, "W", "Averaged Over Gamma")
-```
-
-```{r}
-# Prepare data for MANOVA using relevant columns
+# Combined group variables for MANOVA
 manova_data <- data_raw %>%
-  select(gamma, W, minorityproportion, 
-         altruistmajority, ethnocentristmajority, cosmopolitanmajority, egoistmajority,
-         altruistminority, ethnocentristminority, cosmopolitanminority, egoistminority)
+  mutate(
+    altruistall = altruistmajority + altruistminority,
+    ethnocentristall = ethnocentristmajority + ethnocentristminority,
+    cosmopolitanall = cosmopolitanmajority + cosmopolitanminority,
+    egoistall = egoistmajority + egoistminority
+  )
 
-# Combined group MANOVA (majority + minority)
-manova_data$altruistall <- manova_data$altruistmajority + manova_data$altruistminority
-manova_data$ethnocentristall <- manova_data$ethnocentristmajority + manova_data$ethnocentristminority
-manova_data$cosmopolitanall <- manova_data$cosmopolitanmajority + manova_data$cosmopolitanminority
-manova_data$egoistall <- manova_data$egoistmajority + manova_data$egoistminority
+# Run and summarize MANOVA for each group
 
-# Run MANOVA for All Groups (Combined)
+# MANOVA for Combined Group
 manova_results_all <- manova(cbind(altruistall, ethnocentristall, cosmopolitanall, egoistall) ~ gamma * W, data = manova_data)
 summary(manova_results_all)
 
-# Run MANOVA for Majority Group
+# MANOVA for Majority Group
 manova_results_majority <- manova(cbind(altruistmajority, ethnocentristmajority, cosmopolitanmajority, egoistmajority) ~ gamma * W, data = manova_data)
 summary(manova_results_majority)
 
-# Run MANOVA for Minority Group
+# MANOVA for Minority Group
 manova_results_minority <- manova(cbind(altruistminority, ethnocentristminority, cosmopolitanminority, egoistminority) ~ gamma * W, data = manova_data)
 summary(manova_results_minority)
-```
+

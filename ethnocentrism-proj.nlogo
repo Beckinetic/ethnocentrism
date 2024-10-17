@@ -3,6 +3,8 @@
 ;; Strategy: Way to decide use cooperation or defection in a PD game based on previous gaming history. Values: AC (Always Cooperate), TFTT (Tit-for-two-tats), TFT (Tit-for-tats), GT (Grim Trigger), AD (Always Defect),
 globals [
   n-groups
+  mean-communality-minority
+  mean-communality-majority
 ]
 
 
@@ -53,13 +55,16 @@ to setup
 
     ;; Initialise strategies randomly for each group
     let strategy-list []
-    ;;repeat n-groups [
-    ;;  set strategy-list lput one-of ["AC" "TFTT" "TFT" "GT" "AD"] strategy-list
-    ;;  set strategy-list lput one-of ["TFTT" "TFT" "GT" "AD"] strategy-list
-    ;;]
-    set strategy-list lput one-of ["AC" "AD"] strategy-list
-    set strategy-list lput one-of ["AC" "AD"] strategy-list
-    set strategies strategy-list
+
+    ifelse binary-strategies [
+      set strategy-list lput one-of ["AC" "AD"] strategy-list
+      set strategy-list lput one-of ["AC" "AD"] strategy-list
+      set strategies strategy-list
+    ][
+      set strategy-list lput one-of ["AC" "TFTT" "TFT" "GT" "AD"] strategy-list
+      set strategy-list lput one-of ["AC" "TFTT" "TFT" "GT" "AD"] strategy-list
+      set strategies strategy-list
+    ]
 
     ;; Setup common properties across groups
     set communality 0
@@ -84,6 +89,7 @@ to setup
       ]
     ]
   ]
+
   repeat round (rewire-prop * num-agents) [
     ask one-of turtles [
       ask one-of my-links [die]
@@ -128,10 +134,10 @@ to go
 
       ;; Update communality based on PD game outcome
       ask gamer0 [
-        set communality PD-game action0 action1
+        set communality (communality + PD-game action0 action1)
       ]
       ask gamer1 [
-        set communality PD-game action1 action0
+        set communality (communality + PD-game action1 action0)
       ]
     ][
       ;; No PD game this round
@@ -205,7 +211,17 @@ to go
         ]
 
         ;; Copy strategies
-        if random-float 1 < 1 / (1 + exp (beta * ([communality] of strategy-revisee - communality)))[set strategies [strategies] of strategy-revisee]
+        if random-float 1 < 1 / (1 + exp (beta * (communality - [communality] of strategy-revisee)))[
+          ifelse relative-copy [
+            ifelse tag-ind = [tag-ind] of strategy-revisee [
+              set strategies [strategies] of strategy-revisee
+            ][
+              set strategies reverse ([strategies] of strategy-revisee)
+            ]
+          ][
+            set strategies [strategies] of strategy-revisee
+          ]
+        ]
       ]
     ]
   ]
@@ -237,6 +253,18 @@ to go
         ]
       ]
     ]
+
+    ;;ifelse binary-strategies [
+    ;;  (ifelse
+    ;;    strategies = ["AC" "AC"][set type-agent "Altruist"]
+    ;;    (strategies = ["AC" "AD"] and tag-ind = 0)[set type-agent "Ethnocentrist"]
+    ;;    (strategies = ["AD" "AC"] and tag-ind = 0)[set type-agent "Cosmopolitan"]
+    ;;    (strategies = ["AC" "AD"] and tag-ind = 1)[set type-agent "Cosmopolitan"]
+    ;;    (strategies = ["AD" "AC"] and tag-ind = 1)[set type-agent "Ethnocentrist"]
+    ;;    strategies = ["AD" "AD"][set type-agent "Egoist"])
+    ;;][
+    ;;
+    ;;]
     set type-agent determine-type coop-in coop-out def-in def-out
 
     (ifelse
@@ -250,6 +278,8 @@ to go
   if regular-perturbation? [
     if ticks mod regular-perturbation-interval = 0 and ticks != 0 [perturbate]
   ]
+
+  mean-communality
 
   tick
 
@@ -384,6 +414,16 @@ to perturbate
     ]
   ]
 end
+
+to mean-communality
+  let total-communality-minority 0
+  let total-communality-majority 0
+  ask turtles [
+    ifelse tag = "minority" [set total-communality-minority total-communality-minority + communality][set total-communality-majority total-communality-majority + communality]
+  ]
+  set mean-communality-minority total-communality-minority / count turtles with [tag = "minority"]
+  set mean-communality-majority total-communality-majority / count turtles with [tag = "majority"]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -413,10 +453,10 @@ ticks
 30.0
 
 SLIDER
-13
-10
-202
-43
+14
+96
+203
+129
 num-agents
 num-agents
 0
@@ -428,10 +468,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-13
-49
-202
-82
+14
+135
+203
+168
 minority-proportion
 minority-proportion
 0
@@ -443,40 +483,40 @@ NIL
 HORIZONTAL
 
 SLIDER
-12
-106
-202
-139
+10
+271
+200
+304
 init-likeness-ingroup
 init-likeness-ingroup
 0
 1
-0.7
+0.5
 0.1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-12
-150
-202
-183
+10
+315
+200
+348
 init-likeness-outgroup
 init-likeness-outgroup
 0
 1
-0.3
+0.5
 0.1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-13
-322
-103
-355
+210
+788
+595
+821
 NIL
 setup
 NIL
@@ -490,10 +530,10 @@ NIL
 1
 
 SLIDER
-13
-227
-201
-260
+10
+399
+198
+432
 num-links
 num-links
 0
@@ -505,25 +545,25 @@ NIL
 HORIZONTAL
 
 SLIDER
-13
-268
-201
-301
+10
+440
+198
+473
 rewire-prop
 rewire-prop
 0
 1
-0.4
+0.2
 0.1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-985
-10
-1157
-43
+986
+50
+1158
+83
 gamma
 gamma
 0
@@ -535,10 +575,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-985
-48
-1157
-81
+986
+88
+1158
+121
 beta
 beta
 0
@@ -550,10 +590,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-985
-87
-1157
-120
+986
+127
+1158
+160
 W
 W
 0
@@ -565,10 +605,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-120
-322
-200
-355
+601
+788
+977
+821
 NIL
 go
 T
@@ -582,10 +622,10 @@ NIL
 1
 
 TEXTBOX
-15
-200
-165
-218
+11
+384
+161
+402
 Small World Network
 11
 0.0
@@ -593,7 +633,7 @@ Small World Network
 
 PLOT
 986
-133
+176
 1221
 397
 Had-game Proportion in All Links
@@ -615,7 +655,7 @@ PLOT
 986
 412
 1475
-765
+776
 Agent Types
 NIL
 NIL
@@ -634,10 +674,10 @@ PENS
 "Undefined" 1.0 0 -7500403 true "" "plot (count turtles with [type-agent = \"Undefined\"])"
 
 BUTTON
-13
-370
-199
-403
+10
+518
+196
+551
 NIL
 perturbate
 NIL
@@ -651,10 +691,10 @@ NIL
 1
 
 SLIDER
-13
-483
-199
-516
+10
+631
+196
+664
 iterations
 iterations
 1
@@ -666,10 +706,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-13
-409
-199
-442
+10
+557
+196
+590
 regular-perturbation?
 regular-perturbation?
 1
@@ -677,10 +717,10 @@ regular-perturbation?
 -1000
 
 SLIDER
-13
-445
-199
-478
+10
+593
+196
+626
 regular-perturbation-interval
 regular-perturbation-interval
 0
@@ -693,7 +733,7 @@ HORIZONTAL
 
 PLOT
 1239
-133
+176
 1474
 397
 Strategies
@@ -714,15 +754,85 @@ PENS
 "AD" 1.0 0 -6565750 true "" "plot count turtles with [member? \"AD\" strategies]"
 
 SWITCH
-13
-540
-198
-573
+11
+700
+196
+733
 binary-strategies
 binary-strategies
+0
+1
+-1000
+
+SWITCH
+10
+745
+196
+778
+relative-copy
+relative-copy
 1
 1
 -1000
+
+PLOT
+1166
+10
+1474
+160
+Communality
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"majority" 1.0 0 -2674135 true "" "plot mean-communality-majority"
+"minority" 1.0 0 -13345367 true "" "plot mean-communality-minority"
+
+TEXTBOX
+11
+502
+161
+520
+Perturbation
+11
+0.0
+1
+
+TEXTBOX
+13
+685
+163
+703
+Switches
+11
+0.0
+1
+
+TEXTBOX
+11
+257
+161
+275
+Likeness
+11
+0.0
+1
+
+TEXTBOX
+987
+36
+1137
+54
+Parameters
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1071,7 +1181,7 @@ NetLogo 6.4.0
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="experiment-no-perturbation" repetitions="20" runMetricsEveryStep="false">
+  <experiment name="experiment-baseline" repetitions="20" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <exitCondition>ticks = 501</exitCondition>
@@ -1085,6 +1195,8 @@ NetLogo 6.4.0
     <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "minority"]</metric>
     <metric>count turtles with [type-agent = "Egoist" and tag = "minority"]</metric>
     <metric>count turtles with [type-agent = "Undefined" and tag = "minority"]</metric>
+    <metric>mean-communality-majority</metric>
+    <metric>mean-communality-minority</metric>
     <runMetricsCondition>ticks = 500</runMetricsCondition>
     <enumeratedValueSet variable="init-likeness-ingroup">
       <value value="0.5"/>
@@ -1115,7 +1227,15 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="regular-perturbation-interval">
       <value value="250"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="minority-proportion" first="0.1" step="0.1" last="0.4"/>
+    <enumeratedValueSet variable="minority-proportion">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="binary-strategies">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="relative-copy">
+      <value value="true"/>
+    </enumeratedValueSet>
   </experiment>
   <experiment name="experiment-with-perturbation" repetitions="20" runMetricsEveryStep="false">
     <setup>setup</setup>
@@ -1131,6 +1251,8 @@ NetLogo 6.4.0
     <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "minority"]</metric>
     <metric>count turtles with [type-agent = "Egoist" and tag = "minority"]</metric>
     <metric>count turtles with [type-agent = "Undefined" and tag = "minority"]</metric>
+    <metric>mean-communality-majority</metric>
+    <metric>mean-communality-minority</metric>
     <runMetricsCondition>ticks = 500</runMetricsCondition>
     <enumeratedValueSet variable="init-likeness-ingroup">
       <value value="0.5"/>
@@ -1161,7 +1283,183 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="regular-perturbation-interval">
       <value value="250"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="minority-proportion" first="0.1" step="0.1" last="0.4"/>
+    <enumeratedValueSet variable="minority-proportion">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="binary-strategies">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="relative-copy">
+      <value value="true"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment-new-strategies" repetitions="20" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <exitCondition>ticks = 501</exitCondition>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "minority"]</metric>
+    <metric>mean-communality-majority</metric>
+    <metric>mean-communality-minority</metric>
+    <runMetricsCondition>ticks = 500</runMetricsCondition>
+    <enumeratedValueSet variable="init-likeness-ingroup">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="iterations">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-likeness-outgroup">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="gamma" first="0" step="5" last="20"/>
+    <enumeratedValueSet variable="regular-perturbation?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.002"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="rewire-prop">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-agents">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="W" first="0" step="5" last="20"/>
+    <enumeratedValueSet variable="num-links">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="regular-perturbation-interval">
+      <value value="250"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="minority-proportion">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="binary-strategies">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="relative-copy">
+      <value value="true"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment-behavior-copy" repetitions="20" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <exitCondition>ticks = 501</exitCondition>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "minority"]</metric>
+    <metric>mean-communality-majority</metric>
+    <metric>mean-communality-minority</metric>
+    <runMetricsCondition>ticks = 500</runMetricsCondition>
+    <enumeratedValueSet variable="init-likeness-ingroup">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="iterations">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-likeness-outgroup">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="gamma" first="0" step="5" last="20"/>
+    <enumeratedValueSet variable="regular-perturbation?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.002"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="rewire-prop">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-agents">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="W" first="0" step="5" last="20"/>
+    <enumeratedValueSet variable="num-links">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="regular-perturbation-interval">
+      <value value="250"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="minority-proportion">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="binary-strategies">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="relative-copy">
+      <value value="false"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment-likeness" repetitions="20" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <exitCondition>ticks = 501</exitCondition>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "minority"]</metric>
+    <metric>mean-communality-majority</metric>
+    <metric>mean-communality-minority</metric>
+    <runMetricsCondition>ticks = 500</runMetricsCondition>
+    <steppedValueSet variable="init-likeness-ingroup" first="0.3" step="0.1" last="0.7"/>
+    <enumeratedValueSet variable="iterations">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="init-likeness-outgroup" first="0.3" step="0.1" last="0.7"/>
+    <enumeratedValueSet variable="gamma">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="regular-perturbation?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.002"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="rewire-prop">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-agents">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="W">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-links">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="regular-perturbation-interval">
+      <value value="250"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="minority-proportion">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="binary-strategies">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="relative-copy">
+      <value value="true"/>
+    </enumeratedValueSet>
   </experiment>
 </experiments>
 @#$#@#$#@
