@@ -3,11 +3,22 @@ library(dplyr)
 library(ggplot2)
 
 # Step 1: Data Import and Column Renaming
-data_raw <- read.csv('../data/ethnocentrism-proj experiment-likeness-table.csv', skip=6)
+data_type <- 'likeness'
+data_raw <-
+  read.csv(paste0(
+    '../data/ethnocentrism-proj experiment-',
+    data_type,
+    '-table.csv'
+  ),
+  skip = 6)
 
 # Rename columns for simplicity
 colnames(data_raw) <- colnames(data_raw) %>%
-  gsub("count\\.turtles\\.with\\.\\.type\\.agent\\.\\.\\.\\.|\\.\\.and\\.tag\\.\\.\\.", "", .) %>%
+  gsub(
+    "count\\.turtles\\.with\\.\\.type\\.agent\\.\\.\\.\\.|\\.\\.and\\.tag\\.\\.\\.",
+    "",
+    .
+  ) %>%
   gsub("Altruist", "altruist", .) %>%
   gsub("Ethnocentrist", "ethnocentrist", .) %>%
   gsub("Cosmopolitan", "cosmopolitan", .) %>%
@@ -18,6 +29,14 @@ colnames(data_raw) <- colnames(data_raw) %>%
   gsub("\\.", "", .)
 
 # Step 2: Facet Plot (Dominant Agent Type by In-group and Out-group Likeness)
+
+# Define the color mapping for the agent types
+color_mapping <- c(
+  "Altruist" = "#00CD6C",
+  "Ethnocentrist" = "#F28522",
+  "Cosmopolitan" = "#009ADE",
+  "Egoist" = "#AF58BA"
+)
 
 # Combined group data for Facet Plot
 dominance_data <- data_raw %>%
@@ -42,88 +61,351 @@ dominance_data <- data_raw %>%
     dominance_level = max_value / (altruist + ethnocentrist + cosmopolitan + egoist + undefined)
   )
 
+# majority
+dominance_data_majority <- data_raw %>%
+  group_by(initlikenessingroup, initlikenessoutgroup) %>%
+  summarise(
+    altruist = mean(altruistmajority),
+    ethnocentrist = mean(ethnocentristmajority),
+    cosmopolitan = mean(cosmopolitanmajority),
+    egoist = mean(egoistmajority),
+    undefined = mean(undefinedmajority)
+  ) %>%
+  rowwise() %>%
+  mutate(
+    max_value = max(altruist, ethnocentrist, cosmopolitan, egoist, undefined),
+    dominant_type = case_when(
+      max_value == altruist ~ "Altruist",
+      max_value == ethnocentrist ~ "Ethnocentrist",
+      max_value == cosmopolitan ~ "Cosmopolitan",
+      max_value == egoist ~ "Egoist",
+      max_value == undefined ~ "Undefined"
+    ),
+    dominance_level = max_value / (altruist + ethnocentrist + cosmopolitan + egoist + undefined)
+  )
+
+# minority
+dominance_data_minority <- data_raw %>%
+  group_by(initlikenessingroup, initlikenessoutgroup) %>%
+  summarise(
+    altruist = mean(altruistminority),
+    ethnocentrist = mean(ethnocentristminority),
+    cosmopolitan = mean(cosmopolitanminority),
+    egoist = mean(egoistminority),
+    undefined = mean(undefinedminority)
+  ) %>%
+  rowwise() %>%
+  mutate(
+    max_value = max(altruist, ethnocentrist, cosmopolitan, egoist, undefined),
+    dominant_type = case_when(
+      max_value == altruist ~ "Altruist",
+      max_value == ethnocentrist ~ "Ethnocentrist",
+      max_value == cosmopolitan ~ "Cosmopolitan",
+      max_value == egoist ~ "Egoist",
+      max_value == undefined ~ "Undefined"
+    ),
+    dominance_level = max_value / (altruist + ethnocentrist + cosmopolitan + egoist + undefined)
+  )
+
 # Facet Plot for All Groups
-facet_all <- ggplot(dominance_data, aes(x = initlikenessingroup, y = initlikenessoutgroup)) +
+facet_all <-
+  ggplot(dominance_data,
+         aes(x = initlikenessingroup, y = initlikenessoutgroup)) +
   geom_tile(aes(fill = dominant_type, alpha = dominance_level)) +
   geom_text(aes(label = round(dominance_level * 100, 0)), color = "black", size = 3) +
-  scale_fill_manual(values = c("Altruist" = "green", 
-                               "Ethnocentrist" = "yellow", 
-                               "Cosmopolitan" = "blue", 
-                               "Egoist" = "orange", 
-                               "Undefined" = "darkgrey")) +
-  scale_alpha_continuous(name = "Proportion (%)", range = c(0.2, 1), labels = scales::percent_format(accuracy = 1)) +
+  scale_fill_manual(values = color_mapping) +
+  scale_alpha_continuous(
+    name = "Proportion (%)",
+    range = c(0.2, 1),
+    labels = scales::percent_format(accuracy = 1)
+  ) +
   labs(title = "Final Dominant Agent Type (All Groups)",
-       x = "In-group Likeness", y = "Out-group Likeness", fill = "Dominant Type") +
+       x = "In-group Likeness",
+       y = "Out-group Likeness",
+       fill = "Dominant Type") +
   theme_minimal() +
   theme(panel.grid = element_blank()) +
   coord_fixed()
 
-# Save Facet Plot for All Groups
-ggsave("../plot/likeness_facet_plot_all_groups.png", plot = facet_all, width = 8, height = 6)
+# majority group
+facet_majority <-
+  ggplot(dominance_data_majority, aes(x = initlikenessingroup, y = initlikenessoutgroup)) +
+  geom_tile(aes(fill = dominant_type, alpha = dominance_level)) +
+  geom_text(aes(label = round(dominance_level * 100, 0)), color = "black", size = 3) +
+  scale_fill_manual(values = color_mapping) +
+  scale_alpha_continuous(
+    name = "Proportion (%)",
+    range = c(0.2, 1),
+    labels = scales::percent_format(accuracy = 1)
+  ) +
+  labs(title = "Final Dominant Agent Type (Majority)",
+       x = "In-group Likeness",
+       y = "Out-group Likeness",
+       fill = "Dominant Type") +
+  theme_minimal() +
+  theme(panel.grid = element_blank()) +
+  coord_fixed()
 
-# Step 3: Line Plots for Majority, Minority, and Combined
+# minority group
+facet_minority <-
+  ggplot(dominance_data_minority, aes(x = initlikenessingroup, y = initlikenessoutgroup)) +
+  geom_tile(aes(fill = dominant_type, alpha = dominance_level)) +
+  geom_text(aes(label = round(dominance_level * 100, 0)), color = "black", size = 3) +
+  scale_fill_manual(values = color_mapping) +
+  scale_alpha_continuous(
+    name = "Proportion (%)",
+    range = c(0.2, 1),
+    labels = scales::percent_format(accuracy = 1)
+  ) +
+  labs(title = "Final Dominant Agent Type (Minority)",
+       x = "In-group Likeness",
+       y = "Out-group Likeness",
+       fill = "Dominant Type") +
+  theme_minimal() +
+  theme(panel.grid = element_blank()) +
+  coord_fixed()
 
-# Average data over initlikenessingroup and initlikenessoutgroup
-average_data_ingroup <- data_raw %>%
+# Save Facet Plot
+ggsave(
+  paste0("../plot/", data_type, "_facet_plot_all_groups.png"),
+  plot = facet_all,
+  width = 8,
+  height = 6
+)
+ggsave(
+  paste0("../plot/", data_type, "_facet_plot_majority_groups.png"),
+  plot = facet_majority,
+  width = 8,
+  height = 6
+)
+ggsave(
+  paste0("../plot/", data_type, "_facet_plot_minority_groups.png"),
+  plot = facet_minority,
+  width = 8,
+  height = 6
+)
+
+# Summarize data by gamma for illustration
+average_data_in <- data_raw %>%
   group_by(initlikenessingroup) %>%
-  summarise(across(altruistmajority:egoistminority, mean, .names = "avg_{col}"))
+  summarise(
+    # Averages for majority
+    avg_altruistmajority = mean(altruistmajority),
+    avg_ethnocentristmajority = mean(ethnocentristmajority),
+    avg_cosmopolitanmajority = mean(cosmopolitanmajority),
+    avg_egoistmajority = mean(egoistmajority),
+    
+    # Averages for minority
+    avg_altruistminority = mean(altruistminority),
+    avg_ethnocentristminority = mean(ethnocentristminority),
+    avg_cosmopolitanminority = mean(cosmopolitanminority),
+    avg_egoistminority = mean(egoistminority),
+    
+    # SE for majority
+    se_altruistmajority = calculate_se(altruistmajority),
+    se_ethnocentristmajority = calculate_se(ethnocentristmajority),
+    se_cosmopolitanmajority = calculate_se(cosmopolitanmajority),
+    se_egoistmajority = calculate_se(egoistmajority),
+    
+    # SE for minority
+    se_altruistminority = calculate_se(altruistminority),
+    se_ethnocentristminority = calculate_se(ethnocentristminority),
+    se_cosmopolitanminority = calculate_se(cosmopolitanminority),
+    se_egoistminority = calculate_se(egoistminority)
+  ) %>%
+  # Combined averages and SEs
+  mutate(
+    avg_altruistall = avg_altruistmajority + avg_altruistminority,
+    avg_ethnocentristall = avg_ethnocentristmajority + avg_ethnocentristminority,
+    avg_cosmopolitanall = avg_cosmopolitanmajority + avg_cosmopolitanminority,
+    avg_egoistall = avg_egoistmajority + avg_egoistminority,
+    
+    se_altruistall = sqrt(se_altruistmajority ^ 2 + se_altruistminority ^
+                            2),
+    se_ethnocentristall = sqrt(se_ethnocentristmajority ^ 2 + se_ethnocentristminority ^
+                                 2),
+    se_cosmopolitanall = sqrt(se_cosmopolitanmajority ^ 2 + se_cosmopolitanminority ^
+                                2),
+    se_egoistall = sqrt(se_egoistmajority ^ 2 + se_egoistminority ^ 2)
+  )
 
-average_data_outgroup <- data_raw %>%
+average_data_out <- data_raw %>%
   group_by(initlikenessoutgroup) %>%
-  summarise(across(altruistmajority:egoistminority, mean, .names = "avg_{col}"))
+  summarise(
+    # Averages for majority
+    avg_altruistmajority = mean(altruistmajority),
+    avg_ethnocentristmajority = mean(ethnocentristmajority),
+    avg_cosmopolitanmajority = mean(cosmopolitanmajority),
+    avg_egoistmajority = mean(egoistmajority),
+    
+    # Averages for minority
+    avg_altruistminority = mean(altruistminority),
+    avg_ethnocentristminority = mean(ethnocentristminority),
+    avg_cosmopolitanminority = mean(cosmopolitanminority),
+    avg_egoistminority = mean(egoistminority),
+    
+    # SE for majority
+    se_altruistmajority = calculate_se(altruistmajority),
+    se_ethnocentristmajority = calculate_se(ethnocentristmajority),
+    se_cosmopolitanmajority = calculate_se(cosmopolitanmajority),
+    se_egoistmajority = calculate_se(egoistmajority),
+    
+    # SE for minority
+    se_altruistminority = calculate_se(altruistminority),
+    se_ethnocentristminority = calculate_se(ethnocentristminority),
+    se_cosmopolitanminority = calculate_se(cosmopolitanminority),
+    se_egoistminority = calculate_se(egoistminority)
+  ) %>%
+  # Combined averages and SEs
+  mutate(
+    avg_altruistall = avg_altruistmajority + avg_altruistminority,
+    avg_ethnocentristall = avg_ethnocentristmajority + avg_ethnocentristminority,
+    avg_cosmopolitanall = avg_cosmopolitanmajority + avg_cosmopolitanminority,
+    avg_egoistall = avg_egoistmajority + avg_egoistminority,
+    
+    se_altruistall = sqrt(se_altruistmajority ^ 2 + se_altruistminority ^
+                            2),
+    se_ethnocentristall = sqrt(se_ethnocentristmajority ^ 2 + se_ethnocentristminority ^
+                                 2),
+    se_cosmopolitanall = sqrt(se_cosmopolitanmajority ^ 2 + se_cosmopolitanminority ^
+                                2),
+    se_egoistall = sqrt(se_egoistmajority ^ 2 + se_egoistminority ^ 2)
+  )
 
-plot_types <- function(data, x_var, group, title_suffix, file_name) {
-  if (group == "all") {
+# Plotting Function
+plot_types <-
+  function(data,
+           x_var,
+           group,
+           title_suffix,
+           file_name) {
+    # Set up y-axis aesthetics depending on the group type
+    if (group == "all") {
+      y_vars <-
+        c(
+          "avg_altruistall",
+          "avg_ethnocentristall",
+          "avg_cosmopolitanall",
+          "avg_egoistall"
+        )
+      se_vars <-
+        c("se_altruistall",
+          "se_ethnocentristall",
+          "se_cosmopolitanall",
+          "se_egoistall")
+    } else {
+      y_vars <-
+        paste0("avg_",
+               c("altruist", "ethnocentrist", "cosmopolitan", "egoist"),
+               group)
+      se_vars <-
+        paste0("se_",
+               c("altruist", "ethnocentrist", "cosmopolitan", "egoist"),
+               group)
+    }
+    
+    # Plot
     plot <- ggplot(data, aes_string(x = x_var)) +
-      geom_line(aes(y = avg_altruistmajority + avg_altruistminority, color = "Altruist")) +
-      geom_line(aes(y = avg_ethnocentristmajority + avg_ethnocentristminority, color = "Ethnocentrist")) +
-      geom_line(aes(y = avg_cosmopolitanmajority + avg_cosmopolitanminority, color = "Cosmopolitan")) +
-      geom_line(aes(y = avg_egoistmajority + avg_egoistminority, color = "Egoist")) +
-      scale_color_manual(values = c("Altruist" = "green", 
-                                    "Ethnocentrist" = "yellow", 
-                                    "Cosmopolitan" = "blue", 
-                                    "Egoist" = "orange")) +
-      labs(title = paste("Effect of", x_var, "on Agent Types -", title_suffix),
-           x = x_var, y = "Number of Agents", color = "Agent Type") +
-      ylim(0, 80) + 
+      geom_ribbon(aes_string(
+        ymin = paste0(y_vars[1], " - ", se_vars[1]),
+        ymax = paste0(y_vars[1], " + ", se_vars[1])
+      ),
+      fill = color_mapping["Altruist"],
+      alpha = 0.3) +
+      geom_ribbon(aes_string(
+        ymin = paste0(y_vars[2], " - ", se_vars[2]),
+        ymax = paste0(y_vars[2], " + ", se_vars[2])
+      ),
+      fill = color_mapping["Ethnocentrist"],
+      alpha = 0.3) +
+      geom_ribbon(aes_string(
+        ymin = paste0(y_vars[3], " - ", se_vars[3]),
+        ymax = paste0(y_vars[3], " + ", se_vars[3])
+      ),
+      fill = color_mapping["Cosmopolitan"],
+      alpha = 0.3) +
+      geom_ribbon(aes_string(
+        ymin = paste0(y_vars[4], " - ", se_vars[4]),
+        ymax = paste0(y_vars[4], " + ", se_vars[4])
+      ),
+      fill = color_mapping["Egoist"],
+      alpha = 0.3) +
+      
+      geom_line(aes_string(y = y_vars[1], color = "'Altruist'")) +
+      geom_line(aes_string(y = y_vars[2], color = "'Ethnocentrist'")) +
+      geom_line(aes_string(y = y_vars[3], color = "'Cosmopolitan'")) +
+      geom_line(aes_string(y = y_vars[4], color = "'Egoist'")) +
+      
+      scale_color_manual(values = color_mapping) +
+      labs(
+        title = paste("Effect of", x_var, "on Agent Types -", title_suffix),
+        x = x_var,
+        y = "Number of Agents",
+        color = "Agent Type"
+      ) +
+      ylim(0, 80) +
       theme_minimal() +
       theme(
-        panel.grid.major = element_line(color = "grey80", size = 0.5), 
+        panel.grid.major = element_line(color = "grey80", size = 0.5),
         panel.grid.minor = element_line(color = "grey90", size = 0.25)
       )
-  } else {
-    plot <- ggplot(data, aes_string(x = x_var)) +
-      geom_line(aes_string(y = paste0("avg_altruist", group), color = "'Altruist'")) +
-      geom_line(aes_string(y = paste0("avg_ethnocentrist", group), color = "'Ethnocentrist'")) +
-      geom_line(aes_string(y = paste0("avg_cosmopolitan", group), color = "'Cosmopolitan'")) +
-      geom_line(aes_string(y = paste0("avg_egoist", group), color = "'Egoist'")) +
-      scale_color_manual(values = c("Altruist" = "green", 
-                                    "Ethnocentrist" = "yellow", 
-                                    "Cosmopolitan" = "blue", 
-                                    "Egoist" = "orange")) +
-      labs(title = paste("Effect of", x_var, "on Agent Types -", title_suffix),
-           x = x_var, y = "Number of Agents", color = "Agent Type") +
-      ylim(0, 80) + 
-      theme_minimal() +
-      theme(
-        panel.grid.major = element_line(color = "grey80", size = 0.5), 
-        panel.grid.minor = element_line(color = "grey90", size = 0.25)
-      )
+    
+    # Save the plot
+    ggsave(file_name,
+           plot = plot,
+           width = 8,
+           height = 6)
   }
-  
-  # Save the plot
-  ggsave(file_name, plot = plot, width = 8, height = 6)
-}
 
-# Plot and save for In-group Likeness
-plot_types(average_data_ingroup, "initlikenessingroup", "majority", "Majority Group Averaged Over Out-group Likeness", "../plot/likeness_line_plot_majority_ingroup.png")
-plot_types(average_data_ingroup, "initlikenessingroup", "minority", "Minority Group Averaged Over Out-group Likeness", "../plot/likeness_line_plot_minority_ingroup.png")
-plot_types(average_data_ingroup, "initlikenessingroup", "all", "All Groups Averaged Over Out-group Likeness", "../plot/likeness_line_plot_all_ingroup.png")
+# Plot and save for Gamma
+plot_types(
+  average_data_in,
+  "initlikenessingroup",
+  "majority",
+  "Majority Group Averaged Over W",
+  paste0("../plot/", data_type, "_line_plot_majority_gamma.png")
+)
 
-# Plot and save for Out-group Likeness
-plot_types(average_data_outgroup, "initlikenessoutgroup", "majority", "Majority Group Averaged Over In-group Likeness", "../plot/likeness_line_plot_majority_outgroup.png")
-plot_types(average_data_outgroup, "initlikenessoutgroup", "minority", "Minority Group Averaged Over In-group Likeness", "../plot/likeness_line_plot_minority_outgroup.png")
-plot_types(average_data_outgroup, "initlikenessoutgroup", "all", "All Groups Averaged Over In-group Likeness", "../plot/likeness_line_plot_all_outgroup.png")
+plot_types(
+  average_data_in,
+  "initlikenessingroup",
+  "minority",
+  "Minority Group Averaged Over W",
+  paste0("../plot/", data_type, "_line_plot_minority_gamma.png")
+)
+
+plot_types(
+  average_data_in,
+  "initlikenessingroup",
+  "all",
+  "All Groups Averaged Over W",
+  paste0("../plot/", data_type, "_line_plot_all_gamma.png")
+)
+
+# Plot and save for W
+plot_types(
+  average_data_out,
+  "initlikenessoutgroup",
+  "majority",
+  "Majority Group Averaged Over Gamma",
+  paste0("../plot/", data_type, "_line_plot_majority_W.png")
+)
+
+plot_types(
+  average_data_out,
+  "initlikenessoutgroup",
+  "minority",
+  "Minority Group Averaged Over Gamma",
+  paste0("../plot/", data_type, "_line_plot_minority_W.png")
+)
+
+plot_types(
+  average_data_out,
+  "initlikenessoutgroup",
+  "all",
+  "All Groups Averaged Over Gamma",
+  paste0("../plot/", data_type, "_line_plot_all_W.png")
+)
 
 # Step 4: MANOVA for All, Majority, and Minority Groups
 
@@ -137,13 +419,35 @@ manova_data <- data_raw %>%
   )
 
 # MANOVA for Combined Group
-manova_results_all <- manova(cbind(altruistall, ethnocentristall, cosmopolitanall, egoistall) ~ initlikenessingroup * initlikenessoutgroup, data = manova_data)
+manova_results_all <-
+  manova(
+    cbind(altruistall, ethnocentristall, cosmopolitanall, egoistall) ~ initlikenessingroup * initlikenessoutgroup,
+    data = manova_data
+  )
 summary(manova_results_all)
 
 # MANOVA for Majority Group
-manova_results_majority <- manova(cbind(altruistmajority, ethnocentristmajority, cosmopolitanmajority, egoistmajority) ~ initlikenessingroup * initlikenessoutgroup, data = manova_data)
+manova_results_majority <-
+  manova(
+    cbind(
+      altruistmajority,
+      ethnocentristmajority,
+      cosmopolitanmajority,
+      egoistmajority
+    ) ~ initlikenessingroup * initlikenessoutgroup,
+    data = manova_data
+  )
 summary(manova_results_majority)
 
 # MANOVA for Minority Group
-manova_results_minority <- manova(cbind(altruistminority, ethnocentristminority, cosmopolitanminority, egoistminority) ~ initlikenessingroup * initlikenessoutgroup, data = manova_data)
+manova_results_minority <-
+  manova(
+    cbind(
+      altruistminority,
+      ethnocentristminority,
+      cosmopolitanminority,
+      egoistminority
+    ) ~ initlikenessingroup * initlikenessoutgroup,
+    data = manova_data
+  )
 summary(manova_results_minority)

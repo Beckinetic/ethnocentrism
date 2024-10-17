@@ -1461,6 +1461,62 @@ NetLogo 6.4.0
       <value value="true"/>
     </enumeratedValueSet>
   </experiment>
+  <experiment name="experiment-p-and-ns" repetitions="20" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <exitCondition>ticks = 501</exitCondition>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "minority"]</metric>
+    <metric>mean-communality-majority</metric>
+    <metric>mean-communality-minority</metric>
+    <runMetricsCondition>ticks = 500</runMetricsCondition>
+    <enumeratedValueSet variable="init-likeness-ingroup">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="iterations">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-likeness-outgroup">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="gamma" first="0" step="5" last="20"/>
+    <enumeratedValueSet variable="regular-perturbation?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.002"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="rewire-prop">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-agents">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="W" first="0" step="5" last="20"/>
+    <enumeratedValueSet variable="num-links">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="regular-perturbation-interval">
+      <value value="250"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="minority-proportion">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="binary-strategies">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="relative-copy">
+      <value value="true"/>
+    </enumeratedValueSet>
+  </experiment>
 </experiments>
 @#$#@#$#@
 @#$#@#$#@
