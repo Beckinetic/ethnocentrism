@@ -3,7 +3,8 @@ library(dplyr)
 library(ggplot2)
 
 # Step 1: Data Import and Column Renaming
-data_types <- c('baseline', 'perturbation', 'strategies', 'copy', 'pans')
+data_types <- c('baseline')
+#data_types <- c('baseline', 'strategies', 'copy')
 for (data_type in data_types) {
   data_raw <-
     read.csv(paste0(

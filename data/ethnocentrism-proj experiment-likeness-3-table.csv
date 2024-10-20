@@ -1,0 +1,7 @@
+"BehaviorSpace results (NetLogo 6.4.0)","Table version 2.0"
+"ethnocentrism-proj.nlogo"
+"experiment-likeness-3"
+"10/20/2024 12:13:28:139 +0200"
+"min-pxcor","max-pxcor","min-pycor","max-pycor"
+"-16","16","-16","16"
+"[run number]","init-likeness-ingroup","iterations","init-likeness-outgroup","gamma","regular-perturbation?","beta","rewire-prop","num-agents","W","num-links","regular-perturbation-interval","minority-proportion","binary-strategies","relative-copy","[step]","count turtles with [type-agent = ""Altruist"" and tag = ""majority""]","count turtles with [type-agent = ""Ethnocentrist"" and tag = ""majority""]","count turtles with [type-agent = ""Cosmopolitan"" and tag = ""majority""]","count turtles with [type-agent = ""Egoist"" and tag = ""majority""]","count turtles with [type-agent = ""Undefined"" and tag = ""majority""]","count turtles with [type-agent = ""Altruist"" and tag = ""minority""]","count turtles with [type-agent = ""Ethnocentrist"" and tag = ""minority""]","count turtles with [type-agent = ""Cosmopolitan"" and tag = ""minority""]","count turtles with [type-agent = ""Egoist"" and tag = ""minority""]","count turtles with [type-agent = ""Undefined"" and tag = ""minority""]","mean-communality-majority","mean-communality-minority"

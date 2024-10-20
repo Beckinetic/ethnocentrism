@@ -3,7 +3,7 @@ library(dplyr)
 library(ggplot2)
 
 # Step 1: Data Import and Column Renaming
-data_type <- 'likeness'
+data_type <- 'likeness-2'
 data_raw <-
   read.csv(paste0(
     '../data/ethnocentrism-proj experiment-',
@@ -184,6 +184,11 @@ ggsave(
   width = 8,
   height = 6
 )
+
+# Function to calculate SE
+calculate_se <- function(x) {
+  sd(x) / sqrt(length(x))
+}
 
 # Summarize data by gamma for illustration
 average_data_in <- data_raw %>%

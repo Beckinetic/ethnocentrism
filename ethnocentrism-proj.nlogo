@@ -54,15 +54,15 @@ to setup
     set likeness replace-item tag-ind likeness-list init-likeness-ingroup
 
     ;; Initialise strategies randomly for each group
-    let strategy-list []
+    let strategy-list ["N" "N"]
 
     ifelse binary-strategies [
-      set strategy-list lput one-of ["AC" "AD"] strategy-list
-      set strategy-list lput one-of ["AC" "AD"] strategy-list
+      ifelse random-float 1 < item tag-ind likeness [set strategy-list replace-item tag-ind strategy-list "AC"] [set strategy-list replace-item tag-ind strategy-list "AD"]
+      ifelse random-float 1 < item (1 - tag-ind) likeness [set strategy-list replace-item (1 - tag-ind) strategy-list "AC"] [set strategy-list replace-item (1 - tag-ind) strategy-list "AD"]
       set strategies strategy-list
     ][
-      set strategy-list lput one-of ["AC" "TFTT" "TFT" "GT" "AD"] strategy-list
-      set strategy-list lput one-of ["AC" "TFTT" "TFT" "GT" "AD"] strategy-list
+      ifelse random-float 1 < item tag-ind likeness [set strategy-list replace-item tag-ind strategy-list one-of ["AC" "TFTT" "TFT"]] [set strategy-list replace-item tag-ind strategy-list one-of ["AD" "GT" "TFT"]]
+      ifelse random-float 1 < item (1 - tag-ind) likeness [set strategy-list replace-item (1 - tag-ind) strategy-list one-of ["AC" "TFTT" "TFT"]] [set strategy-list replace-item (1 - tag-ind) strategy-list one-of ["AD" "GT" "TFT"]]
       set strategies strategy-list
     ]
 
@@ -153,48 +153,55 @@ to go
   ask turtles [
     ;; Determine whether do structural or strategic revise
     ifelse (random 20 < W)[
+
       ;; Revise links
       ;; Check if any neighbor has more than 1 neighbor, choose revisee
-      let potential-revisee link-neighbors with [
-        ([hidden?] of link-with myself = false) and count (link-neighbors with [hidden? = false]) >= 2
-      ]
-      if (any? potential-revisee)[
-        let who-revisee [who] of one-of potential-revisee
-        let communality-revisee [communality] of turtle who-revisee
-
-        ;; Revise probability
-        if (random-float 1 < 1 / (1 + exp (beta * (communality-revisee - communality))))[
-          ;; Cut link
-          if (cut-link (min list who who-revisee) (max list who who-revisee))[
-            ask link (min list who who-revisee) (max list who who-revisee) [
-              hide-link
-              set had-game? false
-            ]
-
-            ;; Form new link
-            let potential-new-neighbors turtles with [
-              self != myself and (not link-neighbor? myself or [hidden?] of link-with myself = true) and (link-neighbor? turtle who-revisee and [hidden?] of link-with turtle who-revisee = true)
-            ]
-            if any? potential-new-neighbors [
+      if count my-links with [hidden? = false] >= 2 [
+        let potential-revisee link-neighbors with [
+          ([hidden?] of link-with myself = false)
+        ]
+        let one-link-agents turtles with [count my-links with [hidden? = false] < 2]
+        set potential-revisee potential-revisee who-are-not one-link-agents
+        if (any? potential-revisee)[
+          let revisee one-of potential-revisee
+          let who-revisee [who] of revisee
+          let revisee-actions []
+          ifelse who < who-revisee [
+            set revisee-actions [used-actions1] of link-with revisee
+          ][
+            set revisee-actions [used-actions0] of link-with revisee
+          ]
+          if ([had-game?] of link-with revisee = false or last revisee-actions = "D")[
+            if (random-float 1 < 1 / (1 + exp (beta * ([communality] of revisee - communality))))[
+              ask link-with revisee [
+                hide-link
+                set had-game? false
+              ]
+              let potential-new-neighbors turtles with [
+                self != myself and (not link-neighbor? myself or [hidden?] of link-with myself = true) and (link-neighbor? revisee and [hidden?] of link-with revisee = false)
+              ]
+              if any? potential-new-neighbors [
                 let new-link-neighbor one-of potential-new-neighbors
                 ifelse (link-with new-link-neighbor != nobody)[
-                ask link-with new-link-neighbor [show-link]
-              ][
-                create-link-with new-link-neighbor
-                ask link-with new-link-neighbor [
-                  set had-game? false
-                  set used-actions0 []
-                  set used-actions1 []
+                  ask link-with new-link-neighbor [show-link]
+                ][
+                  create-link-with new-link-neighbor
+                  ask link-with new-link-neighbor [
+                    set had-game? false
+                    set used-actions0 []
+                    set used-actions1 []
+                  ]
                 ]
               ]
-             ]
+            ]
           ]
         ]
       ]
-    ][
+    ]
+    [
       ;; Revise strategies
       if (any? my-links with [had-game? = true and hidden? = false])[
-        let links-revisee-potential my-links with [had-game? = true]
+        let links-revisee-potential my-links with [had-game? = true and hidden? = false]
 
         ;; Find the neighbor that have the maximum number of neighbors
         ;; If there are multiple such neighbors, find the last one
@@ -254,26 +261,31 @@ to go
       ]
     ]
 
-    ;;ifelse binary-strategies [
-    ;;  (ifelse
-    ;;    strategies = ["AC" "AC"][set type-agent "Altruist"]
-    ;;    (strategies = ["AC" "AD"] and tag-ind = 0)[set type-agent "Ethnocentrist"]
-    ;;    (strategies = ["AD" "AC"] and tag-ind = 0)[set type-agent "Cosmopolitan"]
-    ;;    (strategies = ["AC" "AD"] and tag-ind = 1)[set type-agent "Cosmopolitan"]
-    ;;    (strategies = ["AD" "AC"] and tag-ind = 1)[set type-agent "Ethnocentrist"]
-    ;;    strategies = ["AD" "AD"][set type-agent "Egoist"])
-    ;;][
-    ;;
-    ;;]
-    set type-agent determine-type coop-in coop-out def-in def-out
-
-    (ifelse
-      type-agent = "Altruist" [set color lime]
-      type-agent = "Ethnocentrist" [set color yellow]
-      type-agent = "Cosmopolitan" [set color cyan]
-      type-agent = "Egoist" [set color orange]
-      type-agent = "Undefined" [set color grey])
+;;    ifelse binary-strategies [
+;;      (ifelse
+;;        strategies = ["AC" "AC"][set type-agent "Altruist"]
+;;        (strategies = ["AC" "AD"] and tag-ind = 0)[set type-agent "Ethnocentrist"]
+;;        (strategies = ["AD" "AC"] and tag-ind = 0)[set type-agent "Cosmopolitan"]
+;;        (strategies = ["AC" "AD"] and tag-ind = 1)[set type-agent "Cosmopolitan"]
+;;        (strategies = ["AD" "AC"] and tag-ind = 1)[set type-agent "Ethnocentrist"]
+;;        strategies = ["AD" "AD"][set type-agent "Egoist"])
+;;      (ifelse
+;;        type-agent = "Altruist" [set color lime]
+;;        type-agent = "Ethnocentrist" [set color yellow]
+;;        type-agent = "Cosmopolitan" [set color cyan]
+;;        type-agent = "Egoist" [set color orange]
+;;        type-agent = "Undefined" [set color grey])
+;;    ][
+      set type-agent determine-type coop-in coop-out def-in def-out
+      (ifelse
+        type-agent = "Altruist" [set color lime]
+        type-agent = "Ethnocentrist" [set color yellow]
+        type-agent = "Cosmopolitan" [set color cyan]
+        type-agent = "Egoist" [set color orange]
+        type-agent = "Undefined" [set color grey])
+;;    ]
   ]
+
 
   if regular-perturbation? [
     if ticks mod regular-perturbation-interval = 0 and ticks != 0 [perturbate]
@@ -461,7 +473,7 @@ num-agents
 num-agents
 0
 500
-100.0
+98.0
 1
 1
 NIL
@@ -491,7 +503,7 @@ init-likeness-ingroup
 init-likeness-ingroup
 0
 1
-0.5
+0.9
 0.1
 1
 NIL
@@ -506,7 +518,7 @@ init-likeness-outgroup
 init-likeness-outgroup
 0
 1
-0.5
+0.1
 0.1
 1
 NIL
@@ -568,7 +580,7 @@ gamma
 gamma
 0
 20
-20.0
+1.0
 1
 1
 NIL
@@ -598,7 +610,7 @@ W
 W
 0
 20
-4.0
+10.0
 1
 1
 NIL
@@ -771,7 +783,7 @@ SWITCH
 778
 relative-copy
 relative-copy
-1
+0
 1
 -1000
 
@@ -1199,13 +1211,13 @@ NetLogo 6.4.0
     <metric>mean-communality-minority</metric>
     <runMetricsCondition>ticks = 500</runMetricsCondition>
     <enumeratedValueSet variable="init-likeness-ingroup">
-      <value value="0.5"/>
+      <value value="0.7"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="iterations">
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="init-likeness-outgroup">
-      <value value="0.5"/>
+      <value value="0.3"/>
     </enumeratedValueSet>
     <steppedValueSet variable="gamma" first="0" step="5" last="20"/>
     <enumeratedValueSet variable="regular-perturbation?">
@@ -1255,13 +1267,13 @@ NetLogo 6.4.0
     <metric>mean-communality-minority</metric>
     <runMetricsCondition>ticks = 500</runMetricsCondition>
     <enumeratedValueSet variable="init-likeness-ingroup">
-      <value value="0.5"/>
+      <value value="0.7"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="iterations">
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="init-likeness-outgroup">
-      <value value="0.5"/>
+      <value value="0.3"/>
     </enumeratedValueSet>
     <steppedValueSet variable="gamma" first="0" step="5" last="20"/>
     <enumeratedValueSet variable="regular-perturbation?">
@@ -1311,13 +1323,13 @@ NetLogo 6.4.0
     <metric>mean-communality-minority</metric>
     <runMetricsCondition>ticks = 500</runMetricsCondition>
     <enumeratedValueSet variable="init-likeness-ingroup">
-      <value value="0.5"/>
+      <value value="0.7"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="iterations">
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="init-likeness-outgroup">
-      <value value="0.5"/>
+      <value value="0.3"/>
     </enumeratedValueSet>
     <steppedValueSet variable="gamma" first="0" step="5" last="20"/>
     <enumeratedValueSet variable="regular-perturbation?">
@@ -1347,62 +1359,6 @@ NetLogo 6.4.0
     </enumeratedValueSet>
     <enumeratedValueSet variable="relative-copy">
       <value value="true"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="experiment-behavior-copy" repetitions="20" runMetricsEveryStep="false">
-    <setup>setup</setup>
-    <go>go</go>
-    <exitCondition>ticks = 501</exitCondition>
-    <metric>count turtles with [type-agent = "Altruist" and tag = "majority"]</metric>
-    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "majority"]</metric>
-    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "majority"]</metric>
-    <metric>count turtles with [type-agent = "Egoist" and tag = "majority"]</metric>
-    <metric>count turtles with [type-agent = "Undefined" and tag = "majority"]</metric>
-    <metric>count turtles with [type-agent = "Altruist" and tag = "minority"]</metric>
-    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "minority"]</metric>
-    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "minority"]</metric>
-    <metric>count turtles with [type-agent = "Egoist" and tag = "minority"]</metric>
-    <metric>count turtles with [type-agent = "Undefined" and tag = "minority"]</metric>
-    <metric>mean-communality-majority</metric>
-    <metric>mean-communality-minority</metric>
-    <runMetricsCondition>ticks = 500</runMetricsCondition>
-    <enumeratedValueSet variable="init-likeness-ingroup">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="iterations">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="init-likeness-outgroup">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="gamma" first="0" step="5" last="20"/>
-    <enumeratedValueSet variable="regular-perturbation?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="beta">
-      <value value="0.002"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="rewire-prop">
-      <value value="0.2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="num-agents">
-      <value value="100"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="W" first="0" step="5" last="20"/>
-    <enumeratedValueSet variable="num-links">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="regular-perturbation-interval">
-      <value value="250"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="minority-proportion">
-      <value value="0.2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="binary-strategies">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="relative-copy">
-      <value value="false"/>
     </enumeratedValueSet>
   </experiment>
   <experiment name="experiment-likeness" repetitions="20" runMetricsEveryStep="false">
@@ -1443,7 +1399,7 @@ NetLogo 6.4.0
       <value value="100"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="W">
-      <value value="5"/>
+      <value value="10"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="num-links">
       <value value="2"/>
@@ -1461,7 +1417,63 @@ NetLogo 6.4.0
       <value value="true"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="experiment-p-and-ns" repetitions="20" runMetricsEveryStep="false">
+  <experiment name="experiment-likeness-2" repetitions="20" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <exitCondition>ticks = 501</exitCondition>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "minority"]</metric>
+    <metric>mean-communality-majority</metric>
+    <metric>mean-communality-minority</metric>
+    <runMetricsCondition>ticks = 500</runMetricsCondition>
+    <steppedValueSet variable="init-likeness-ingroup" first="0.3" step="0.1" last="0.7"/>
+    <enumeratedValueSet variable="iterations">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="init-likeness-outgroup" first="0.3" step="0.1" last="0.7"/>
+    <enumeratedValueSet variable="gamma">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="regular-perturbation?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.002"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="rewire-prop">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-agents">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="W">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-links">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="regular-perturbation-interval">
+      <value value="250"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="minority-proportion">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="binary-strategies">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="relative-copy">
+      <value value="true"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment-baseline-2" repetitions="20" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <exitCondition>ticks = 501</exitCondition>
@@ -1479,17 +1491,17 @@ NetLogo 6.4.0
     <metric>mean-communality-minority</metric>
     <runMetricsCondition>ticks = 500</runMetricsCondition>
     <enumeratedValueSet variable="init-likeness-ingroup">
-      <value value="0.5"/>
+      <value value="0.7"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="iterations">
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="init-likeness-outgroup">
-      <value value="0.5"/>
+      <value value="0.3"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="gamma" first="0" step="5" last="20"/>
+    <steppedValueSet variable="gamma" first="0" step="2" last="20"/>
     <enumeratedValueSet variable="regular-perturbation?">
-      <value value="true"/>
+      <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta">
       <value value="0.002"/>
@@ -1500,7 +1512,7 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="num-agents">
       <value value="100"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="W" first="0" step="5" last="20"/>
+    <steppedValueSet variable="W" first="0" step="2" last="20"/>
     <enumeratedValueSet variable="num-links">
       <value value="2"/>
     </enumeratedValueSet>
@@ -1511,7 +1523,7 @@ NetLogo 6.4.0
       <value value="0.2"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="binary-strategies">
-      <value value="false"/>
+      <value value="true"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="relative-copy">
       <value value="true"/>
