@@ -3,7 +3,7 @@ library(dplyr)
 library(ggplot2)
 
 # Step 1: Data Import and Column Renaming
-data_type <- 'likeness-2'
+data_type <- 'likeness-3'
 data_raw <-
   read.csv(paste0(
     '../data/ethnocentrism-proj experiment-',
@@ -281,6 +281,7 @@ average_data_out <- data_raw %>%
 plot_types <-
   function(data,
            x_var,
+           x_lab,
            group,
            title_suffix,
            file_name) {
@@ -343,8 +344,8 @@ plot_types <-
       
       scale_color_manual(values = color_mapping) +
       labs(
-        title = paste("Effect of", x_var, "on Agent Types -", title_suffix),
-        x = x_var,
+        title = paste("Effect of", x_lab, "on Agent Types -", title_suffix),
+        x = x_lab,
         y = "Number of Agents",
         color = "Agent Type"
       ) +
@@ -366,50 +367,56 @@ plot_types <-
 plot_types(
   average_data_in,
   "initlikenessingroup",
+  "In-group likenss",
   "majority",
-  "Majority Group Averaged Over W",
-  paste0("../plot/", data_type, "_line_plot_majority_gamma.png")
+  "Majority Group",
+  paste0("../plot/", data_type, "_line_plot_majority_in.png")
 )
 
 plot_types(
   average_data_in,
   "initlikenessingroup",
+  "In-group likenss",
   "minority",
-  "Minority Group Averaged Over W",
-  paste0("../plot/", data_type, "_line_plot_minority_gamma.png")
+  "Minority Group",
+  paste0("../plot/", data_type, "_line_plot_minority_in.png")
 )
 
 plot_types(
   average_data_in,
   "initlikenessingroup",
+  "In-group likenss",
   "all",
-  "All Groups Averaged Over W",
-  paste0("../plot/", data_type, "_line_plot_all_gamma.png")
+  "All Groups",
+  paste0("../plot/", data_type, "_line_plot_all_in.png")
 )
 
 # Plot and save for W
 plot_types(
   average_data_out,
   "initlikenessoutgroup",
+  "Out-group likenss",
   "majority",
-  "Majority Group Averaged Over Gamma",
-  paste0("../plot/", data_type, "_line_plot_majority_W.png")
+  "Majority Group",
+  paste0("../plot/", data_type, "_line_plot_majority_out.png")
 )
 
 plot_types(
   average_data_out,
   "initlikenessoutgroup",
+  "Out-group likenss",
   "minority",
-  "Minority Group Averaged Over Gamma",
-  paste0("../plot/", data_type, "_line_plot_minority_W.png")
+  "Minority Group",
+  paste0("../plot/", data_type, "_line_plot_minority_out.png")
 )
 
 plot_types(
   average_data_out,
   "initlikenessoutgroup",
+  "Out-group likenss",
   "all",
-  "All Groups Averaged Over Gamma",
-  paste0("../plot/", data_type, "_line_plot_all_W.png")
+  "All Groups",
+  paste0("../plot/", data_type, "_line_plot_all_out.png")
 )
 
 # Step 4: MANOVA for All, Majority, and Minority Groups

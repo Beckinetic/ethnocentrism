@@ -473,7 +473,7 @@ num-agents
 num-agents
 0
 500
-98.0
+100.0
 1
 1
 NIL
@@ -580,7 +580,7 @@ gamma
 gamma
 0
 20
-1.0
+3.0
 1
 1
 NIL
@@ -724,7 +724,7 @@ SWITCH
 590
 regular-perturbation?
 regular-perturbation?
-1
+0
 1
 -1000
 
@@ -737,7 +737,7 @@ regular-perturbation-interval
 regular-perturbation-interval
 0
 500
-250.0
+100.0
 1
 1
 NIL
@@ -1219,7 +1219,19 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="init-likeness-outgroup">
       <value value="0.3"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="gamma" first="0" step="5" last="20"/>
+    <enumeratedValueSet variable="gamma">
+      <value value="0"/>
+      <value value="1"/>
+      <value value="2"/>
+      <value value="4"/>
+      <value value="7"/>
+      <value value="10"/>
+      <value value="13"/>
+      <value value="16"/>
+      <value value="18"/>
+      <value value="19"/>
+      <value value="20"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="regular-perturbation?">
       <value value="false"/>
     </enumeratedValueSet>
@@ -1232,7 +1244,19 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="num-agents">
       <value value="100"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="W" first="0" step="5" last="20"/>
+    <enumeratedValueSet variable="W">
+      <value value="0"/>
+      <value value="1"/>
+      <value value="2"/>
+      <value value="4"/>
+      <value value="7"/>
+      <value value="10"/>
+      <value value="13"/>
+      <value value="16"/>
+      <value value="18"/>
+      <value value="19"/>
+      <value value="20"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="num-links">
       <value value="2"/>
     </enumeratedValueSet>
@@ -1249,7 +1273,7 @@ NetLogo 6.4.0
       <value value="true"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="experiment-with-perturbation" repetitions="20" runMetricsEveryStep="false">
+  <experiment name="experiment-perturbation" repetitions="20" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <exitCondition>ticks = 501</exitCondition>
@@ -1275,7 +1299,19 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="init-likeness-outgroup">
       <value value="0.3"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="gamma" first="0" step="5" last="20"/>
+    <enumeratedValueSet variable="gamma">
+      <value value="0"/>
+      <value value="1"/>
+      <value value="2"/>
+      <value value="4"/>
+      <value value="7"/>
+      <value value="10"/>
+      <value value="13"/>
+      <value value="16"/>
+      <value value="18"/>
+      <value value="19"/>
+      <value value="20"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="regular-perturbation?">
       <value value="true"/>
     </enumeratedValueSet>
@@ -1288,7 +1324,19 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="num-agents">
       <value value="100"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="W" first="0" step="5" last="20"/>
+    <enumeratedValueSet variable="W">
+      <value value="0"/>
+      <value value="1"/>
+      <value value="2"/>
+      <value value="4"/>
+      <value value="7"/>
+      <value value="10"/>
+      <value value="13"/>
+      <value value="16"/>
+      <value value="18"/>
+      <value value="19"/>
+      <value value="20"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="num-links">
       <value value="2"/>
     </enumeratedValueSet>
@@ -1305,7 +1353,7 @@ NetLogo 6.4.0
       <value value="true"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="experiment-new-strategies" repetitions="20" runMetricsEveryStep="false">
+  <experiment name="experiment-strategies" repetitions="20" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <exitCondition>ticks = 501</exitCondition>
@@ -1331,7 +1379,19 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="init-likeness-outgroup">
       <value value="0.3"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="gamma" first="0" step="5" last="20"/>
+    <enumeratedValueSet variable="gamma">
+      <value value="0"/>
+      <value value="1"/>
+      <value value="2"/>
+      <value value="4"/>
+      <value value="7"/>
+      <value value="10"/>
+      <value value="13"/>
+      <value value="16"/>
+      <value value="18"/>
+      <value value="19"/>
+      <value value="20"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="regular-perturbation?">
       <value value="false"/>
     </enumeratedValueSet>
@@ -1344,7 +1404,19 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="num-agents">
       <value value="100"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="W" first="0" step="5" last="20"/>
+    <enumeratedValueSet variable="W">
+      <value value="0"/>
+      <value value="1"/>
+      <value value="2"/>
+      <value value="4"/>
+      <value value="7"/>
+      <value value="10"/>
+      <value value="13"/>
+      <value value="16"/>
+      <value value="18"/>
+      <value value="19"/>
+      <value value="20"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="num-links">
       <value value="2"/>
     </enumeratedValueSet>
@@ -1378,11 +1450,11 @@ NetLogo 6.4.0
     <metric>mean-communality-majority</metric>
     <metric>mean-communality-minority</metric>
     <runMetricsCondition>ticks = 500</runMetricsCondition>
-    <steppedValueSet variable="init-likeness-ingroup" first="0.3" step="0.1" last="0.7"/>
+    <steppedValueSet variable="init-likeness-ingroup" first="0.1" step="0.1" last="0.9"/>
     <enumeratedValueSet variable="iterations">
       <value value="1"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="init-likeness-outgroup" first="0.3" step="0.1" last="0.7"/>
+    <steppedValueSet variable="init-likeness-outgroup" first="0.1" step="0.1" last="0.9"/>
     <enumeratedValueSet variable="gamma">
       <value value="5"/>
     </enumeratedValueSet>
@@ -1434,16 +1506,72 @@ NetLogo 6.4.0
     <metric>mean-communality-majority</metric>
     <metric>mean-communality-minority</metric>
     <runMetricsCondition>ticks = 500</runMetricsCondition>
-    <steppedValueSet variable="init-likeness-ingroup" first="0.3" step="0.1" last="0.7"/>
+    <steppedValueSet variable="init-likeness-ingroup" first="0.1" step="0.1" last="0.9"/>
     <enumeratedValueSet variable="iterations">
       <value value="1"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="init-likeness-outgroup" first="0.3" step="0.1" last="0.7"/>
+    <steppedValueSet variable="init-likeness-outgroup" first="0.1" step="0.1" last="0.9"/>
     <enumeratedValueSet variable="gamma">
-      <value value="1"/>
+      <value value="5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="regular-perturbation?">
       <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.002"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="rewire-prop">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-agents">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="W">
+      <value value="19"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-links">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="regular-perturbation-interval">
+      <value value="250"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="minority-proportion">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="binary-strategies">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="relative-copy">
+      <value value="true"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment-likeness-3" repetitions="20" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <exitCondition>ticks = 501</exitCondition>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "majority"]</metric>
+    <metric>count turtles with [type-agent = "Altruist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Ethnocentrist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Cosmopolitan" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Egoist" and tag = "minority"]</metric>
+    <metric>count turtles with [type-agent = "Undefined" and tag = "minority"]</metric>
+    <metric>mean-communality-majority</metric>
+    <metric>mean-communality-minority</metric>
+    <runMetricsCondition>ticks = 500</runMetricsCondition>
+    <steppedValueSet variable="init-likeness-ingroup" first="0.1" step="0.1" last="0.9"/>
+    <enumeratedValueSet variable="iterations">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="init-likeness-outgroup" first="0.1" step="0.1" last="0.9"/>
+    <enumeratedValueSet variable="gamma">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="regular-perturbation?">
+      <value value="true"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta">
       <value value="0.002"/>
@@ -1473,7 +1601,7 @@ NetLogo 6.4.0
       <value value="true"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="experiment-baseline-2" repetitions="20" runMetricsEveryStep="false">
+  <experiment name="experiment-hyperperturbation" repetitions="20" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <exitCondition>ticks = 501</exitCondition>
@@ -1499,9 +1627,12 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="init-likeness-outgroup">
       <value value="0.3"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="gamma" first="0" step="2" last="20"/>
+    <enumeratedValueSet variable="gamma">
+      <value value="19"/>
+      <value value="20"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="regular-perturbation?">
-      <value value="false"/>
+      <value value="true"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta">
       <value value="0.002"/>
@@ -1512,7 +1643,19 @@ NetLogo 6.4.0
     <enumeratedValueSet variable="num-agents">
       <value value="100"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="W" first="0" step="2" last="20"/>
+    <enumeratedValueSet variable="W">
+      <value value="0"/>
+      <value value="1"/>
+      <value value="2"/>
+      <value value="4"/>
+      <value value="7"/>
+      <value value="10"/>
+      <value value="13"/>
+      <value value="16"/>
+      <value value="18"/>
+      <value value="19"/>
+      <value value="20"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="num-links">
       <value value="2"/>
     </enumeratedValueSet>

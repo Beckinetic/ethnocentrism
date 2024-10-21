@@ -3,8 +3,8 @@ library(dplyr)
 library(ggplot2)
 
 # Step 1: Data Import and Column Renaming
-data_types <- c('baseline')
-#data_types <- c('baseline', 'strategies', 'copy')
+#data_types <- c('baseline', 'strategies', 'perturbation')
+data_types <- c("hyperperturbation")
 for (data_type in data_types) {
   data_raw <-
     read.csv(paste0(
@@ -110,7 +110,7 @@ for (data_type in data_types) {
     )
   
   # plot all
-  facet_all <- ggplot(dominance_data, aes(x = gamma, y = W)) +
+  facet_all <- ggplot(dominance_data, aes(x = as.factor(gamma), y = as.factor(W))) +
     geom_tile(aes(fill = dominant_type, alpha = dominance_level)) +
     geom_text(aes(label = round(dominance_level * 100, 0)), color = "black", size = 3) +
     scale_fill_manual(values = color_mapping) +
@@ -129,7 +129,7 @@ for (data_type in data_types) {
   
   # majority group
   facet_majority <-
-    ggplot(dominance_data_majority, aes(x = gamma, y = W)) +
+    ggplot(dominance_data_majority, aes(x = as.factor(gamma), y = as.factor(W))) +
     geom_tile(aes(fill = dominant_type, alpha = dominance_level)) +
     geom_text(aes(label = round(dominance_level * 100, 0)), color = "black", size = 3) +
     scale_fill_manual(values = color_mapping) +
@@ -148,7 +148,7 @@ for (data_type in data_types) {
   
   # minority group
   facet_minority <-
-    ggplot(dominance_data_minority, aes(x = gamma, y = W)) +
+    ggplot(dominance_data_minority, aes(x = as.factor(gamma), y = as.factor(W))) +
     geom_tile(aes(fill = dominant_type, alpha = dominance_level)) +
     geom_text(aes(label = round(dominance_level * 100, 0)), color = "black", size = 3) +
     scale_fill_manual(values = color_mapping) +
